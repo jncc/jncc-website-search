@@ -14,7 +14,7 @@
     <PackageReference Include="AWSSDK.SQS" Version="3.3.100.30" />
     <PackageReference Include="CsvHelper" Version="12.1.2" />
     <PackageReference Include="dotenv.net" Version="1.0.4" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
 </Project>
