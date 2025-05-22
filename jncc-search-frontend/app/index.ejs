@@ -5,10 +5,8 @@ var totalPages = hits ? Math.ceil(hits.total.value/queryParams.pageSize) : 1
 
 if (env === 'live') {
     var baseUrl = 'https://jncc.gov.uk'
-    var hubUrl = 'https://hub.jncc.gov.uk/'
 } else {
     var baseUrl = 'https://jncc-website-devuat.azurewebsites.net'
-    var hubUrl = 'https://jncc-website-devuat.azurewebsites.net/resources'
 }
 
 function isCookiePolicyAccepted() {
@@ -240,7 +238,7 @@ function formatBytes(bytes, decimals = 2) {
                                 </ul>
                             </li>
                             <li class="menuitem">
-                                <a href="<%- hubUrl %>">Resources</a>
+                                <a href="<%- baseUrl %>/resources/">Resources</a>
                             </li>
                             <li class="is-dropdown-submenu-parent">
                                 <a href="<%- baseUrl %>/about-jncc/">About JNCC</a>
@@ -460,7 +458,7 @@ function formatBytes(bytes, decimals = 2) {
 							<h3>Our work</h3>
 							<ul class="footer-nav no-bullet">
 								<li><a href="<%- baseUrl %>/our-work/our-work-a-z/">Our work A-Z</a></li>
-								<li><a href="<%- hubUrl %>">Resource hub</a></li>
+								<li><a href="<%- baseUrl %>/resources/">Resource hub</a></li>
 								<li><a href="<%- baseUrl %>/about-jncc/jncc-blog/">JNCC Blog</a></li>
 								<li><a href="<%- baseUrl %>/news/">News</a></li>
 							</ul>
