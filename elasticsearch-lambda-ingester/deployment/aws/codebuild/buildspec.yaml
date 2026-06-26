@@ -1,0 +1,40 @@
+version: 0.2
+env:
+  shell: bash
+phases:
+  install:
+    runtime-versions:
+      java: corretto25
+  pre_build:
+    commands:
+      - echo `aws --version`
+      - DATESTAMP=$(date +"%Y%m%d")
+      - BUILD_NUMBER=$CODEBUILD_BUILD_NUMBER
+      - LAMBDA_ARN=${LAMBDA_ARN}
+      - LAMBDA_ARTEFACT_NAME=$LAMBDA_ARTEFACT_NAME
+      - LAMBDA_ARTEFACT=$LAMBDA_ARTEFACT_NAME-$DATESTAMP-$BUILD_NUMBER.zip
+      - LAMBDA_DEPLOYMENT_BUCKET=$LAMBDA_DEPLOYMENT_BUCKET
+      - LAMBDA_DEPLOYMENT_BUCKET_PATH=$LAMBDA_DEPLOYMENT_BUCKET_PATH
+      - LAMBDA_REGION=$LAMBDA_REGION
+      - apt-get update -y
+      - apt-get install -y maven xmlstarlet
+      - echo Configured pre-build environment
+  build:
+    commands:
+      - echo Build started on `env TZ=Europe/London date`
+      - cd jncc-website-search/elasticsearch-lambda-ingester
+      - cp pom.xml pom.old.xml
+      - echo Updating pom.xml with build information
+      - xmlstarlet ed -u "/_:project/_:version" -v "$DATESTAMP-$BUILD_NUMBER" pom.old.xml > pom.xml
+      - echo Building JAR package
+      - mvn package shade:shade
+      - echo Moving target for final deployment
+      - mv target/elasticsearch-lambda-ingester-$DATESTAMP-$BUILD_NUMBER.jar $LAMBDA_ARTEFACT
+  post_build:
+    commands:
+      - echo Build completed on `env TZ=Europe/London date`
+      - echo Saving package to $LAMBDA_DEPLOYMENT_BUCKET
+      - aws s3 cp $LAMBDA_ARTEFACT s3://$LAMBDA_DEPLOYMENT_BUCKET/$LAMBDA_DEPLOYMENT_BUCKET_PATH/
+      - echo Deploying new code to $LAMBDA_ARN lambda
+      - aws lambda update-function-code --function-name $LAMBDA_ARN --s3-bucket $LAMBDA_DEPLOYMENT_BUCKET --s3-key $LAMBDA_DEPLOYMENT_BUCKET_PATH/$LAMBDA_ARTEFACT --region $LAMBDA_REGION
+      - echo Done!
