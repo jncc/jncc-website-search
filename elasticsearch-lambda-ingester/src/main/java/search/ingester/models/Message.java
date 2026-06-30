@@ -5,10 +5,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Message {
 
-    @JsonProperty("S3BucketName")
+    @JsonProperty("s3BucketName")
     private String s3BucketName;
 
-    @JsonProperty("S3Key")
+    @JsonProperty("s3Key")
     private String s3Key;
 
     @JsonProperty("index")
