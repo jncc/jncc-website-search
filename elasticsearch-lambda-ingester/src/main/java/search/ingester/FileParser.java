@@ -6,7 +6,6 @@ import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;	
 import org.apache.tika.parser.AutoDetectParser;	
 import org.apache.tika.parser.ParseContext;	
-import org.apache.tika.parser.html.HtmlParser;	
 import org.apache.tika.sax.BodyContentHandler;	
 import org.xml.sax.SAXException;	
 import search.ingester.models.Document;	
@@ -28,14 +27,14 @@ import search.ingester.models.Document;
      */	
     public Document parseFile(Document document) throws IOException, SAXException, TikaException {	
 
-         // Create auto document parser and try to extract some textual info from the base64 encoded string passed to it	
+        // Create auto document parser and try to extract some textual info from the base64 encoded string passed to it	
         BodyContentHandler handler = new BodyContentHandler(TIKA_MAX_CHARACTER_LIMIT);	
         AutoDetectParser parser = new AutoDetectParser();	
         Metadata metadata = new Metadata();	
         InputStream stream = new ByteArrayInputStream(Base64.getDecoder().decode(document.getFileBase64()));	
 
          try {	
-            parser.parse(stream, handler, metadata);	
+            parser.parse(stream, handler, metadata);
         } catch(SAXException ex) {	
             if (ex.getClass().getCanonicalName() != "org.apache.tika.sax.WriteOutContentHandler$WriteLimitReachedException") {	
                 throw ex;	
@@ -79,7 +78,7 @@ import search.ingester.models.Document;
      */    	
     public Document parseHTMLContentString(Document document) throws IOException, SAXException, TikaException {	
         BodyContentHandler handler = new BodyContentHandler(TIKA_MAX_CHARACTER_LIMIT);	
-        HtmlParser parser = new HtmlParser();	
+        AutoDetectParser parser = new AutoDetectParser();	
         Metadata metadata = new Metadata();	
 
          InputStream stream = new ByteArrayInputStream(document.getContent().getBytes());	
