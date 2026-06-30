@@ -3,23 +3,25 @@ package search.ingester;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import java.io.*;
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
+import java.nio.charset.StandardCharsets;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.DeleteObjectRequest;
-import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.S3Object;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 
 import search.ingester.models.Message;
 
 public class Ingester implements RequestHandler<SQSEvent, Void> {
 
     // Only set up if we need to read an S3 message, otherwise left as null
-    private AmazonS3 s3Client;
+    private S3Client s3Client;
 
     /**
      * Handle an incoming SQS Message and insert into or delete from the relevant search index on a specified AWS
@@ -89,15 +91,15 @@ public class Ingester implements RequestHandler<SQSEvent, Void> {
      */
     private Message getMessageFromS3(String bucket, String key) throws Exception {
         // Get the object reference and build a buffered reader around it
-        S3Object fullObject = s3Client.getObject(new GetObjectRequest(bucket, key));
-        BufferedReader reader = new BufferedReader(new InputStreamReader(fullObject.getObjectContent()));
-
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .build();
+        ResponseInputStream<GetObjectResponse> response = s3Client.getObject(getObjectRequest);
+        
         // Extract the JSON object as text from the input stream
-        String text = "";
-        String line;
-        while ((line = reader.readLine()) != null){
-            text = text + "\n" + line;
-        }
+        String text = new String(response.readAllBytes(), StandardCharsets.UTF_8);
+        response.close();
         
         // Return the extracted message object from the S3 JSON file
         // Automatically close `file` handler to sidestep long running lambda keeping in memory file references
@@ -114,7 +116,10 @@ public class Ingester implements RequestHandler<SQSEvent, Void> {
      * @param key The full key of the object to be removed from the bucket
      */
     private void deleteObjectFromS3(String bucket, String key) {
-        DeleteObjectRequest req = new DeleteObjectRequest(bucket, key);
+        DeleteObjectRequest req = DeleteObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .build();
         s3Client.deleteObject(req);
     }
 
@@ -123,10 +128,10 @@ public class Ingester implements RequestHandler<SQSEvent, Void> {
      *
      * @return A configured S3 client
      */
-    private AmazonS3 getS3Client() {
-        return AmazonS3ClientBuilder.standard()
-                .withRegion(new Env().AWS_REGION())
-                .withCredentials(new DefaultAWSCredentialsProviderChain())
+    private S3Client getS3Client() {
+        return S3Client.builder()
+                .region(Region.of(new Env().AWS_REGION()))
+                .credentialsProvider(DefaultCredentialsProvider.create())
                 .build();
     }
 }
