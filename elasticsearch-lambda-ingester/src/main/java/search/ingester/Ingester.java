@@ -1,7 +1,6 @@
 package search.ingester;
 
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import com.amazonaws.services.lambda.runtime.Context;
@@ -22,6 +21,7 @@ public class Ingester implements RequestHandler<SQSEvent, Void> {
 
     // Only set up if we need to read an S3 message, otherwise left as null
     private S3Client s3Client;
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * Handle an incoming SQS Message and insert into or delete from the relevant search index on a specified AWS
@@ -43,10 +43,9 @@ public class Ingester implements RequestHandler<SQSEvent, Void> {
             System.out.println(msg.getBody());
 
             // workaround Java's checked exceptions
-            // Automatically close `file` handler to sidestep long running lambda keeping in memory file references
-            try (Jsonb jsonb = JsonbBuilder.create()) {
+            try {
                 // deserialize a Message from the JSON body of the SQS message
-                Message message = jsonb.fromJson(msg.getBody(), Message.class);
+                Message message = objectMapper.readValue(msg.getBody(), Message.class);
                 handleMessage(message, new Processor(new ElasticService(new Env()), new FileParser()));
             }
             catch (Exception ex) {
@@ -102,10 +101,7 @@ public class Ingester implements RequestHandler<SQSEvent, Void> {
         response.close();
         
         // Return the extracted message object from the S3 JSON file
-        // Automatically close `file` handler to sidestep long running lambda keeping in memory file references
-        try (Jsonb jsonb = JsonbBuilder.create()) {
-            return jsonb.fromJson(text, Message.class);
-        }
+        return objectMapper.readValue(text, Message.class);
     }
 
     /**

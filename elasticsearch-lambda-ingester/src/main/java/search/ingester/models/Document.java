@@ -1,6 +1,6 @@
 package search.ingester.models;
 
-import javax.json.bind.annotation.JsonbProperty;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -16,56 +16,56 @@ import java.util.List;
 public class Document {
 
     @NotBlank
-    @JsonbProperty("id")
+    @JsonProperty("id")
     private String id;
 
     @NotBlank
     @Pattern(regexp = "datahub|website|website-assets|mhc|sac", flags = Pattern.Flag.CASE_INSENSITIVE, message = "Site must be datahub|website|website-assets|mhc|sac")
-    @JsonbProperty("site")
+    @JsonProperty("site")
     private String site;
 
     @NotBlank
-    @JsonbProperty("title")
+    @JsonProperty("title")
     private String title;
 
     //@NotEmpty
-    @JsonbProperty("keywords")
+    @JsonProperty("keywords")
     private List<Keyword> keywords;
 
     @NotBlank
-    @JsonbProperty("content")
+    @JsonProperty("content")
     private String content;
 
     @NotBlank
-    @JsonbProperty("content_truncated")
+    @JsonProperty("content_truncated")
     private String contentTruncated;
 
-    @JsonbProperty("resource_type")	
+    @JsonProperty("resource_type")
     private String resourceType;
 
-    @JsonbProperty("file_base64")
+    @JsonProperty("file_base64")
     private String fileBase64;
 
-    @JsonbProperty("file_bytes")
+    @JsonProperty("file_bytes")
     private Integer fileBytes;
 
-    @JsonbProperty("file_extension")
+    @JsonProperty("file_extension")
     private String fileExtension;
 
     @NotBlank
-    @JsonbProperty("url")
+    @JsonProperty("url")
     private String url;
 
     @Pattern(regexp = "^([\\+-]?\\d{4}(?!\\d{2}\\b))((-?)((0[1-9]|1[0-2])(\\3([12]\\d|0[1-9]|3[01]))?|W([0-4]\\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\\d|[12]\\d{2}|3([0-5]\\d|6[1-6])))([T\\s]((([01]\\d|2[0-3])((:?)[0-5]\\d)?|24\\:?00)([\\.,]\\d+(?!:))?)?(\\17[0-5]\\d([\\.,]\\d+)?)?([zZ]|([\\+-])([01]\\d|2[0-3]):?([0-5]\\d)?)?)?)?$", message = "Must be an ISO 8601 date")
-    @JsonbProperty("published_date")
+    @JsonProperty("published_date")
     private String publishedDate;
 
     @Pattern(regexp = "^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", message = "ID must be a UUID")
-    @JsonbProperty("asset_id")
+    @JsonProperty("asset_id")
     private String assetId;
 
     @NotBlank
-    @JsonbProperty("timestamp_utc")
+    @JsonProperty("timestamp_utc")
     private String timestampUtc;
     
     public String getId() { return id; }

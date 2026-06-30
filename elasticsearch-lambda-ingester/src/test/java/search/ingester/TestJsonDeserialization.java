@@ -11,8 +11,7 @@ import static org.mockito.Mockito.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
  
 public class TestJsonDeserialization {
@@ -21,8 +20,8 @@ public class TestJsonDeserialization {
     public void shouldDeserializeResourcesIfPresent() {
 
         // String messageBody = "";
-        // Jsonb jsonb = JsonbBuilder.create();
-        // Message message = jsonb.fromJson(messageBody, Message.class);
+        // ObjectMapper objectMapper = new ObjectMapper();
+        // Message message = objectMapper.readValue(messageBody, Message.class);
 
     }
 }
