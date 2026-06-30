@@ -12,7 +12,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import java.util.List;
 
-@NotBlankIfAnotherFieldIsBlank(fieldName="content", dependFieldName = "file_base64")
+@NotBlankIfAnotherFieldIsBlank(fieldName="content", dependFieldName = "fileBase64")
 public class Document {
 
     @NotBlank
@@ -32,11 +32,9 @@ public class Document {
     @JsonProperty("keywords")
     private List<Keyword> keywords;
 
-    @NotBlank
     @JsonProperty("content")
     private String content;
 
-    @NotBlank
     @JsonProperty("content_truncated")
     private String contentTruncated;
 
