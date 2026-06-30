@@ -12,7 +12,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import java.util.List;
 
-@NotBlankIfAnotherFieldIsBlank(fieldName="content", dependFieldName = "fileBase64")
+@NotBlankIfAnotherFieldIsBlank(fieldName="content", dependFieldName = "file_base64")
 public class Document {
 
     @NotBlank
