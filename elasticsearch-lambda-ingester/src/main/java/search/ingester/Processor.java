@@ -66,7 +66,7 @@ public class Processor {
         DocumentTweaker.setContentTruncatedField(doc);
         DocumentTweaker.setTimestamp(doc);
         validateDocument(doc);
-    }    
+    } 
 
     /**
      * Upserts a prepared document into the current ElasticSearch index
@@ -83,12 +83,12 @@ public class Processor {
         // if this doc represents a "file" (e.g. a PDF) then it will have a file_base64	
         // field	
         // which we need to extract into the content field etc.	
-        if (doc.getFileBase64() != null) {	
+        if (doc.getFileBase64() != null) {
             try {	
                 // note this function mutates its argument (and returns it for good measure!)	
-                doc = fileParser.parseFile(doc);	
+                doc = fileParser.parseFile(doc);
             } catch (Exception err) {	
-                throw new RuntimeException(err);	
+                throw new RuntimeException(err);
             }	
         }	
     }

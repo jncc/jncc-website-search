@@ -2,11 +2,12 @@ package search.ingester;
 
 import java.io.*;	
 import java.util.Base64;	
-import org.apache.tika.exception.TikaException;	
-import org.apache.tika.metadata.Metadata;	
-import org.apache.tika.parser.AutoDetectParser;	
+import org.apache.tika.exception.TikaException;
+import org.apache.tika.io.TikaInputStream;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.parser.AutoDetectParser;
+import org.apache.tika.parser.pdf.PDFParser;	
 import org.apache.tika.parser.ParseContext;	
-import org.apache.tika.parser.html.HtmlParser;	
 import org.apache.tika.sax.BodyContentHandler;	
 import org.xml.sax.SAXException;	
 import search.ingester.models.Document;	
@@ -27,31 +28,32 @@ import search.ingester.models.Document;
      * @throws TikaException Thrown as part of the Tika package parsing the given document	
      */	
     public Document parseFile(Document document) throws IOException, SAXException, TikaException {	
-
-         // Create auto document parser and try to extract some textual info from the base64 encoded string passed to it	
+        // Create parser and try to extract some textual info from the base64 encoded string passed to it. Note this will only work for PDF files.
         BodyContentHandler handler = new BodyContentHandler(TIKA_MAX_CHARACTER_LIMIT);	
-        AutoDetectParser parser = new AutoDetectParser();	
+        PDFParser parser = new PDFParser();	// No longer works with AutoDetectParser
         Metadata metadata = new Metadata();	
-        InputStream stream = new ByteArrayInputStream(Base64.getDecoder().decode(document.getFileBase64()));	
+        ParseContext context = new ParseContext();
+        TikaInputStream stream = TikaInputStream.get(Base64.getDecoder().decode(document.getFileBase64()));
 
-         try {	
-            parser.parse(stream, handler, metadata);	
+        try {
+            parser.parse(stream, handler, metadata, context);
         } catch(SAXException ex) {	
-            if (ex.getClass().getCanonicalName() != "org.apache.tika.sax.WriteOutContentHandler$WriteLimitReachedException") {	
+            if (!ex.getClass().getCanonicalName().equals("org.apache.tika.sax.WriteOutContentHandler$WriteLimitReachedException")) {	
                 throw ex;	
             } else {	
                 System.out.println(String.format("Got more characters than current Tika limit (%d), truncating to limit", TIKA_MAX_CHARACTER_LIMIT));	
             }	
         }	
 
-         // Grab the extracted content from the parser and strip out all repeated whitespace characters as we don't need	
-        // them, if no content don't replace the existing content	
+        // Grab the extracted content from the parser and strip out all repeated whitespace characters as we don't need	
+        // them, if no content don't replace the existing content
+	
         String newContent = handler.toString().replaceAll("\\s+", " ").trim();	
         if (!newContent.isEmpty()) {	
-            document.setContent(newContent);	
+            document.setContent(newContent);
         }
 
-         // If a title exists in the document metadata replace the document title with it	
+        // If a title exists in the document metadata replace the document title with it	
         if (metadata.get("title") != null) {
         
             String mdTitle = metadata.get("title").trim();
@@ -62,10 +64,10 @@ import search.ingester.models.Document;
             }	
         }	
 
-         // Clear b64 encoded file	
+        // Clear b64 encoded file	
         document.setFileBase64(null);	
 
-         return document;	
+        return document;	
     }	
 
      /**	
@@ -79,7 +81,7 @@ import search.ingester.models.Document;
      */    	
     public Document parseHTMLContentString(Document document) throws IOException, SAXException, TikaException {	
         BodyContentHandler handler = new BodyContentHandler(TIKA_MAX_CHARACTER_LIMIT);	
-        HtmlParser parser = new HtmlParser();	
+        AutoDetectParser parser = new AutoDetectParser();	
         Metadata metadata = new Metadata();	
 
          InputStream stream = new ByteArrayInputStream(document.getContent().getBytes());	

@@ -1,16 +1,16 @@
 package search.ingester.models;
 
-import javax.json.bind.annotation.JsonbProperty;
-import org.hibernate.validator.constraints.NotBlank;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import javax.validation.constraints.NotBlank;
 
 public class Keyword {
 
     @NotBlank
-    @JsonbProperty("vocab")
+    @JsonProperty("vocab")
     public String vocab;
 
     @NotBlank
-    @JsonbProperty("value")
+    @JsonProperty("value")
     public String value;
 
     public String getVocab() { return vocab; }

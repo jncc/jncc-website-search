@@ -1,28 +1,22 @@
 package search.ingester;
 
 import java.io.IOException;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import com.amazonaws.auth.AWS4Signer;
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-import com.amazonaws.http.AWSRequestSigningApacheInterceptor;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpRequestInterceptor;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.common.xcontent.XContentType;
-import org.elasticsearch.action.delete.DeleteRequest;
-import org.elasticsearch.action.delete.DeleteResponse;
-import org.elasticsearch.action.DocWriteResponse;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.opensearch.core.DeleteRequest;
+import org.opensearch.client.opensearch.core.DeleteResponse;
+import org.opensearch.client.opensearch.core.IndexRequest;
+import org.opensearch.client.opensearch.core.IndexResponse;
+import org.opensearch.client.transport.aws.AwsSdk2Transport;
+import org.opensearch.client.transport.aws.AwsSdk2TransportOptions;
+import software.amazon.awssdk.http.apache.ApacheHttpClient;
 import search.ingester.models.Document;
 
 public class ElasticService {
 
     private Env env;
-    private static RestHighLevelClient esClient;
+    private static OpenSearchClient osClient;
 
 
     public ElasticService(Env env) {
@@ -30,26 +24,25 @@ public class ElasticService {
     }
 
     /**
-     * Create configured a High Level Elasticsearch REST client with an AWS http interceptor to sign the data package
-     * being sent
+     * Create configured OpenSearch client with AWS SDK v2 transport for native request signing
      *
-     * @return A Configured High Level Elasticsearch REST client to send packets to an AWS ES service
+     * @return A Configured OpenSearch client to send packets to an AWS OpenSearch service
      */
-    private static RestHighLevelClient getEsClient(Env env) {
-        RestHighLevelClient client = ElasticService.esClient;
+    private static OpenSearchClient getOsClient(Env env) {
+        OpenSearchClient client = ElasticService.osClient;
 
         if (client == null) {
-            String awsServiceName = "es";
-            AWS4Signer signer = new AWS4Signer();
-            signer.setServiceName(awsServiceName);
-            signer.setRegionName(env.AWS_REGION());
-            HttpRequestInterceptor interceptor =
-                    new AWSRequestSigningApacheInterceptor(awsServiceName, signer, new DefaultAWSCredentialsProviderChain());
-            client = new RestHighLevelClient(
-                    RestClient.builder(HttpHost.create(env.ES_ENDPOINT()))
-                            .setHttpClientConfigCallback(callback -> callback.addInterceptorLast(interceptor)));
-
-            ElasticService.esClient = client;
+            AwsSdk2Transport transport = new AwsSdk2Transport(
+                    ApacheHttpClient.builder().build(),
+                    env.ES_ENDPOINT().replace("https://", "").replace("http://", ""),
+                    "es",
+                    Region.of(env.AWS_REGION()),
+                    AwsSdk2TransportOptions.builder()
+                            .setCredentials(DefaultCredentialsProvider.create())
+                            .build());
+            
+            client = new OpenSearchClient(transport);
+            ElasticService.osClient = client;
         }
 
         return client;
@@ -57,34 +50,38 @@ public class ElasticService {
 
     public void putDocument(String index, Document doc) throws IOException {
 
-        IndexRequest req = new IndexRequest(index, env.ES_DOCTYPE(), doc.getId());
+        IndexRequest<Document> req = new IndexRequest.Builder<Document>()
+                .index(index)
+                .id(doc.getId())
+                .document(doc)
+                .build();
 
-        Jsonb jsonb = JsonbBuilder.create();
-        req.source(jsonb.toJson(doc), XContentType.JSON);
+        IndexResponse resp = ElasticService.getOsClient(env).index(req);
 
-        IndexResponse resp = ElasticService.getEsClient(env).index(req, RequestOptions.DEFAULT);
-
-        if (!(resp.getResult() == DocWriteResponse.Result.CREATED
-                || resp.getResult() == DocWriteResponse.Result.UPDATED)) {
+        String result = resp.result().jsonValue();
+        if (!("created".equals(result) || "updated".equals(result))) {
             throw new RuntimeException(
-                    String.format("Index Response return was not as expected got (%d) with the following " +
-                            "returned %s", resp.status().getStatus(), resp.toString()));
+                    String.format("Index Response return was not as expected got result '%s'", result));
         }
     }
 
     public void deleteDocument(String index, String docId) throws IOException {
 
-        DeleteRequest request = new DeleteRequest(index, env.ES_DOCTYPE(), docId);
-        DeleteResponse response = ElasticService.getEsClient(env).delete(request, RequestOptions.DEFAULT);
+        DeleteRequest request = new DeleteRequest.Builder()
+                .index(index)
+                .id(docId)
+                .build();
+        
+        DeleteResponse response = ElasticService.getOsClient(env).delete(request);
 
-        if (response.getResult() != DocWriteResponse.Result.DELETED) {
+        String result = response.result().jsonValue();
+        if (!"deleted".equals(result)) {
             // we only have one queue for all environments, so avoid filling it with 404s which
             // can happen more easily in non-live environments
-            boolean nonLive404 = !index.startsWith("live") && response.status().getStatus() == 404;
+            boolean nonLive404 = !index.startsWith("live") && "not_found".equals(result);
             if (!nonLive404) {
                 throw new RuntimeException(
-                        String.format("Index Response not as expected. Got (%d) with the following " +
-                                "returned %s", response.status().getStatus(), response.toString()));
+                        String.format("Index Response not as expected. Got result '%s'", result));
             }
         }
     }    
