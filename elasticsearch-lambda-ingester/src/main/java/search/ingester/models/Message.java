@@ -1,26 +1,26 @@
 package search.ingester.models;
 
 import java.util.List;
-import javax.json.bind.annotation.JsonbProperty;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Message {
 
-    @JsonbProperty("S3BucketName")
+    @JsonProperty("s3BucketName")
     private String s3BucketName;
 
-    @JsonbProperty("S3Key")
+    @JsonProperty("s3Key")
     private String s3Key;
 
-    @JsonbProperty("index")
+    @JsonProperty("index")
     private String index;
 
-    @JsonbProperty("verb")
+    @JsonProperty("verb")
     private String verb;
 
-    @JsonbProperty("document")
+    @JsonProperty("document")
     private Document document;
 
-    @JsonbProperty("resources")
+    @JsonProperty("resources")
     private List<Document> resources;
 
     public String getIndex() { return index; }

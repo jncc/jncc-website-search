@@ -28,7 +28,7 @@ public class NotBlankIfAnotherFieldIsBlankValidator implements ConstraintValidat
             if (StringUtils.isBlank(fieldValue) && StringUtils.isBlank(dependFieldValue)) {
                 ctx.disableDefaultConstraintViolation();
                 ctx.buildConstraintViolationWithTemplate(ctx.getDefaultConstraintMessageTemplate())
-                        .addNode(dependFieldName)
+                        .addPropertyNode(dependFieldName)
                         .addConstraintViolation();
                 return false;
             }
