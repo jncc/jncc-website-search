@@ -11,11 +11,6 @@ public class DocumentTweaker {
         // in the search results (when not using highlights).
 
         String c = doc.getContent();
-        
-        if (c == null) {
-            doc.setContentTruncated("");
-            return;
-        }
     
         c = c.replace("\n", ""); // remove newlines
         c = c.trim();            // trim leading and trailing whitespace

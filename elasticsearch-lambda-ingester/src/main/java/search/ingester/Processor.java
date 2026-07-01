@@ -62,19 +62,11 @@ public class Processor {
      * @throws IOException
      */
     private void prepareDocument(Document doc) throws IOException {
-        validateInput(doc);
         extractContentFromFileBase64IfNecessary(doc);
         DocumentTweaker.setContentTruncatedField(doc);
         DocumentTweaker.setTimestamp(doc);
         validateDocument(doc);
-    }
-
-    private void validateInput(Document doc) {
-        if (org.apache.commons.lang3.StringUtils.isBlank(doc.getContent()) 
-                && org.apache.commons.lang3.StringUtils.isBlank(doc.getFileBase64())) {
-            throw new RuntimeException("Document must have either content or file_base64 provided");
-        }
-    }    
+    } 
 
     /**
      * Upserts a prepared document into the current ElasticSearch index

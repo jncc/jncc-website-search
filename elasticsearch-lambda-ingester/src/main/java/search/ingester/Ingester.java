@@ -1,8 +1,6 @@
 package search.ingester;
 
-import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import com.amazonaws.services.lambda.runtime.Context;
@@ -23,9 +21,7 @@ public class Ingester implements RequestHandler<SQSEvent, Void> {
 
     // Only set up if we need to read an S3 message, otherwise left as null
     private S3Client s3Client;
-    private static final ObjectMapper objectMapper = JsonMapper.builder()
-            .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
-            .build();
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * Handle an incoming SQS Message and insert into or delete from the relevant search index on a specified AWS
