@@ -8,7 +8,7 @@
     "test": "tests"
   },
   "dependencies": {
-    "@aws-sdk/credential-provider-node": "^3.812.0",
+    "@aws-sdk/credential-provider-node": "^3.972.10",
     "@opensearch-project/opensearch": "^3.5.1",
     "dotenv": "^10.0.0"
   },
